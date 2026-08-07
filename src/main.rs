@@ -19,23 +19,16 @@ fn handle_connection(mut stream: TcpStream) {
     let request_line = buf_reader.lines().next().unwrap().unwrap();
     tracing::info!("handle_connection - request_line: {request_line}");
     
-    if request_line == "GET / HTTP/1.1" {
-        let status_line = "HTTP/1.1 222 CUSTOM STATUS";
-        let content = fs::read_to_string("html/hello.html").unwrap();
-        let length = content.len();
-
-        // HTTP format is just a text file with key value pairs except status and content
-        let response = format!("{status_line}\nContent-length: {length}\n\n{content}");
-        stream.write_all(response.as_bytes()).unwrap();
+    let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
+        ("HTTP/1.1 222 CUSTOM STATUS", "html/hello.html")
     } else {
-        let status_line = "HTTP/1.1 404 NOT FOUND OOPS";
-        let content = fs::read_to_string("html/404.html").unwrap();
-        let length = content.len();
+        ("HTTP/1.1 404 NOT FOUND OOPS", "html/404.html")
+    };
 
-        let response = format!(
-            "{status_line}\r\nContent-Length: {length}\r\n\r\n{content}"
-        );
+    let content = fs::read_to_string(filename).unwrap();
+    let length = content.len();
 
-        stream.write_all(response.as_bytes()).unwrap();
-    }
+    // HTTP format is just a text file with key value pairs except status and content
+    let response = format!("{status_line}\nContent-length: {length}\n\n{content}");
+    stream.write_all(response.as_bytes()).unwrap();
 }
