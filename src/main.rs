@@ -23,7 +23,7 @@ fn handle_connection(mut stream: TcpStream) {
     let request_line = buf_reader.lines().next().unwrap().unwrap();
     tracing::info!("handle_connection - request_line: {request_line}");
     
-    let (status_line, filename) = match &request_line[..] {
+    let (status_line, filename) = match request_line.as_str() {
         "GET / HTTP/1.1" => ("HTTP/1.1 222 CUSTOM STATUS", "html/hello.html"),
         "GET /sleep HTTP/1.1" => {
             thread::sleep(Duration::from_secs(5));
