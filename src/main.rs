@@ -1,5 +1,9 @@
 use std::{
-    fs, io::{BufRead, BufReader, Write}, net::{TcpListener, TcpStream},
+    fs,
+    io::{BufRead, BufReader, Write},
+    net::{TcpListener, TcpStream},
+    thread,
+    time::Duration,
 };
 
 fn main() {
@@ -19,10 +23,13 @@ fn handle_connection(mut stream: TcpStream) {
     let request_line = buf_reader.lines().next().unwrap().unwrap();
     tracing::info!("handle_connection - request_line: {request_line}");
     
-    let (status_line, filename) = if request_line == "GET / HTTP/1.1" {
-        ("HTTP/1.1 222 CUSTOM STATUS", "html/hello.html")
-    } else {
-        ("HTTP/1.1 404 NOT FOUND OOPS", "html/404.html")
+    let (status_line, filename) = match &request_line[..] {
+        "GET / HTTP/1.1" => ("HTTP/1.1 222 CUSTOM STATUS", "html/hello.html"),
+        "GET /sleep HTTP/1.1" => {
+            thread::sleep(Duration::from_secs(5));
+            ("HTTP/1.1 200 OK", "html/hello.html")
+        }
+        _ => ("HTTP/1.1 404 NOT FOUND OOPS", "html/404.html"),
     };
 
     let content = fs::read_to_string(filename).unwrap();
